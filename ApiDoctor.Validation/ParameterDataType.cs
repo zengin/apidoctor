@@ -317,7 +317,7 @@ namespace ApiDoctor.Validation
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        internal bool IsLessSpecificThan(ParameterDataType type)
+        public  bool IsLessSpecificThan(ParameterDataType type)
         {
             /*
                 For JSON, we basically have the following hierarchy of data types:
