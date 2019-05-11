@@ -51,43 +51,42 @@ namespace ApiDoctor.ConsoleApp
 
         public const string VerbGenerateDocs = "generate-docs";
 
-        [VerbOption(VerbPrint, HelpText = "Print files, resources, and methods discovered in the documentation.")]
-        public PrintOptions PrintVerbOptions { get; set; }
+        [Option(VerbPrint, HelpText = "Print files, resources, and methods discovered in the documentation.")]
+        public PrintOptions PrintOptions { get; set; }
 
-        [VerbOption(VerbCheckLinks, HelpText = "Verify links in the documentation aren't broken.")]
+        [Option(VerbCheckLinks, HelpText = "Verify links in the documentation aren't broken.")]
         public CheckLinkOptions CheckLinksVerb { get; set; }
 
-        [VerbOption(VerbDocs, HelpText = "Check for errors in the documentation (resources + examples).")]
+        [Option(VerbDocs, HelpText = "Check for errors in the documentation (resources + examples).")]
         public BasicCheckOptions CheckDocsVerb { get; set; }
 
-        [VerbOption(VerbCheckAll, HelpText = "Check for errors in the documentation (links + resources + examples)")]
+        [Option(VerbCheckAll, HelpText = "Check for errors in the documentation (links + resources + examples)")]
         public CheckLinkOptions CheckAllVerbs { get; set; }
 
-        [VerbOption(VerbService, HelpText = "Check for errors between the documentation and service.")]
+        [Option(VerbService, HelpText = "Check for errors between the documentation and service.")]
         public CheckServiceOptions CheckServiceVerb { get; set; }
 
-        [VerbOption(VerbPublish, HelpText = "Publish a version of the documentation, optionally converting it into other formats.")]
+        [Option(VerbPublish, HelpText = "Publish a version of the documentation, optionally converting it into other formats.")]
         public PublishOptions PublishVerb { get; set; }
 
-        [VerbOption(VerbPublishMetadata, HelpText = "Publish or update metadata based on information in the docset.")]
+        [Option(VerbPublishMetadata, HelpText = "Publish or update metadata based on information in the docset.")]
         public PublishMetadataOptions EdmxPublishVerb { get; set; }
 
-        [VerbOption(VerbMetadata, HelpText = "Check service CSDL metadata against documentation.")]
+        [Option(VerbMetadata, HelpText = "Check service CSDL metadata against documentation.")]
         public CheckMetadataOptions CheckMetadataVerb { get; set; }
 
-        [VerbOption(VerbFix, HelpText = "Fix documentation based on input CSDL.")]
+        [Option(VerbFix, HelpText = "Fix documentation based on input CSDL.")]
         public FixDocsOptions FixDocsVerb { get; set; }
 
-        [VerbOption(VerbGenerateDocs, HelpText = "Generate documentation from an CSDL model")]
+        [Option(VerbGenerateDocs, HelpText = "Generate documentation from an CSDL model")]
         public GenerateDocsOptions GenerateDocsVerb { get; set; }
 
-        [VerbOption(VerbAbout, HelpText = "Print about information for this application.")]
+        [Option(VerbAbout, HelpText = "Print about information for this application.")]
         public BaseOptions AboutVerb { get; set; }
 
-        [HelpVerbOption]
         public string GetUsage(string verb)
         {
-            return HelpText.AutoBuild(this, verb);
+            throw new NotImplementedException();
         }
     }
 
@@ -256,10 +255,10 @@ namespace ApiDoctor.ConsoleApp
 
     class BasicCheckOptions : DocSetOptions
     {
-        [Option('m', "method", HelpText = "Name of the method to test. If omitted, all defined methods are tested.", MutuallyExclusiveSet="fileOrMethod")]
+        [Option('m', "method", HelpText = "Name of the method to test. If omitted, all defined methods are tested.")]
         public string MethodName { get; set; }
 
-        [Option("file", HelpText="Name of the files to test. Wildcard(*) is allowed. If missing, methods across all files are tested.", MutuallyExclusiveSet="fileOrMethod")]
+        [Option("file", HelpText="Name of the files to test. Wildcard(*) is allowed. If missing, methods across all files are tested.")]
         public string FileName { get; set; }
 
         [Option("force-all", HelpText="Force all defined scenarios to be executed, even if disabled.")]
@@ -317,7 +316,7 @@ namespace ApiDoctor.ConsoleApp
         [Option("headers", HelpText = "Additional headers to add to requests to the service. For example If-Match: *")]
         public string AdditionalHeaders { get; set; }
 
-        [Option("odata-metadata", HelpText="Set the odata.metadata level in the accept header.", DefaultValue=null)]
+        [Option("odata-metadata", HelpText="Set the odata.metadata level in the accept header.")]
         public string ODataMetadataLevel { get; set; }
 
         public List<IServiceAccount> FoundAccounts { get; set; }
@@ -325,7 +324,7 @@ namespace ApiDoctor.ConsoleApp
         [Option("branch-name")]
         public string BranchName { get; set; }
 
-        [Option("parallel", HelpText = "Run service tests in parallel.", DefaultValue = false)]
+        [Option("parallel", HelpText = "Run service tests in parallel.")]
         public bool ParallelTests { get; set; }
 
         [Option("username", HelpText = "Provide a username for basic authentication.")]
@@ -453,7 +452,7 @@ namespace ApiDoctor.ConsoleApp
         [Option("compare-to", HelpText = "Specify a metadata input file to sort and compare with the published output. Both will be output to {name}-sorted.edmx")]
         public string CompareToMetadataPath { get; set; }
 
-        [Option("format", DefaultValue=MetadataFormat.Default, HelpText="Specify the input and output formats for metadata.")]
+        [Option("format",  HelpText="Specify the input and output formats for metadata.")]
         public MetadataFormat DataFormat { get; set; }
 
         [Option("namespaces", HelpText = "Specify the namespaces that are included when publishing Edmx. Semicolon separated values.")]
@@ -474,7 +473,7 @@ namespace ApiDoctor.ConsoleApp
         [Option("keep-unrecognized-objects-from-compare-to", HelpText = "By default, we drop any extra elements that the 'compare-to' file has. When this is true, we keep them.")]
         public bool KeepUnrecognizedObjects { get; set; }
 
-        [Option("annotations", DefaultValue = AnnotationOptions.None, HelpText = "Specify whether and how to output annotations.")]
+        [Option("annotations",  HelpText = "Specify whether and how to output annotations.")]
         public AnnotationOptions Annotations { get; set; }
 
         [Option("validate", HelpText = "Perform validation on the resulting schema to check for errors.")]
@@ -517,20 +516,19 @@ namespace ApiDoctor.ConsoleApp
         [Option("output", Required=true, HelpText="Output directory for sanitized documentation.")]
         public string OutputDirectory { get; set; }
 
-        [Option("format", DefaultValue=PublishFormat.Markdown, HelpText="Format of the output documentation. Possiblev values are html, markdown, mustache, jsontoc, swagger, and edmx.")]
+        [Option("format",  HelpText="Format of the output documentation. Possiblev values are html, markdown, mustache, jsontoc, swagger, and edmx.")]
         public PublishFormat Format { get; set; }
 
         [Option("template", HelpText = "Specify the folder where output template files are located.")]
         public string TemplatePath { get; set; }
 
-        [Option("template-filename", HelpText="Override the default template filename.", DefaultValue = "template.htm")]
+        [Option("template-filename", HelpText="Override the default template filename.")]
         public string TemplateFilename { get; set; }
 
-        [Option("file-ext", HelpText="Override the default output file extension.", DefaultValue = ".htm")]
+        [Option("file-ext", HelpText="Override the default output file extension.")]
         public string OutputExtension { get; set; }
 
         [Option("line-ending",
-            DefaultValue=LineEndings.Default,
             HelpText="Change the line endings for output files. Values: default, windows, unix, or macintosh")]
         public LineEndings LineEndings { get; set; }
 
@@ -556,19 +554,19 @@ namespace ApiDoctor.ConsoleApp
 
         #region Swagger2 output controls
 
-        [Option("swagger-title", DefaultValue=null, HelpText="Title to include in the published documentation")]
+        [Option("swagger-title",HelpText="Title to include in the published documentation")]
         public string Title { get; set; }
         
-        [Option("swagger-description", DefaultValue = null, HelpText = "Description to include in the published documentation")]
+        [Option("swagger-description",  HelpText = "Description to include in the published documentation")]
         public string Description { get; set; }
         
-        [Option("swagger-version", DefaultValue=null, HelpText="Api Version information to include in documentation")]
+        [Option("swagger-version", HelpText="Api Version information to include in documentation")]
         public string Version { get; set; }
 
         [Option("swagger-auth-scope", HelpText = "Override the auth scope detection with a default auth scope on every method")]
         public string AuthScopeDefault { get; set; }
 
-        [Option("template-format", HelpText = "For EDMX publishing, only publish a single schema in CSDL format instead of the full EDMX.", DefaultValue = MetadataFormat.Default)]
+        [Option("template-format", HelpText = "For EDMX publishing, only publish a single schema in CSDL format instead of the full EDMX.")]
         public MetadataFormat TemplateFormat { get; set; }
 
 
