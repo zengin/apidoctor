@@ -79,7 +79,7 @@ namespace ApiDoctor.Validation
         /// </summary>
         public List<string> ContentOutline { get; set; }
 
-        public DocumentType DocType { get; protected set; } = DocumentType.NotSpecified;
+        public PageType DocumentPageType { get; protected set; } = PageType.NotSpecified;
 
         public ResourceDefinition[] Resources
         {
@@ -143,7 +143,7 @@ namespace ApiDoctor.Validation
         protected DocFile()
         {
             this.ContentOutline = new List<string>();
-            this.DocumentHeaders = new List<Config.DocumentHeader>();
+            this.DocumentHeaders = new List<DocumentHeader>();
         }
 
         public DocFile(string basePath, string relativePath, DocSet parent)
@@ -153,7 +153,7 @@ namespace ApiDoctor.Validation
             this.FullPath = Path.Combine(basePath, relativePath.Substring(1));
             this.DisplayName = relativePath;
             this.Parent = parent;
-            this.DocumentHeaders = new List<Config.DocumentHeader>();
+            this.DocumentHeaders = new List<DocumentHeader>();
         }
 
         #endregion
@@ -233,7 +233,7 @@ namespace ApiDoctor.Validation
             try
             {
                 string fileContents = this.GetContentsOfFile(tags);
-                fileContents = this.ParseAndRemoveYamlFrontMatter(fileContents, issues);
+                fileContents = ParseAndRemoveYamlFrontMatter(fileContents, issues);
                 return fileContents;
             }
             catch (Exception ex)
@@ -244,10 +244,10 @@ namespace ApiDoctor.Validation
         }
 
         /// <summary>
-        /// Parses the file contents and removes yaml front matter from the markdown.
+        /// Extract YAML front matter from the markdown
         /// </summary>
         /// <param name="contents">Contents.</param>
-        private string ParseAndRemoveYamlFrontMatter(string contents, IssueLogger issues)
+        private string ExtractYamlFrontMatter(string contents, IssueLogger issues)
         {
             const string YamlFrontMatterHeader = "---";
             using (StringReader reader = new StringReader(contents))
@@ -263,14 +263,8 @@ namespace ApiDoctor.Validation
                         case YamlFrontMatterDetectionState.NotDetected:
                             if (!string.IsNullOrWhiteSpace(trimmedCurrentLine) && trimmedCurrentLine != YamlFrontMatterHeader)
                             {
-                                var requiredYamlHeaders = DocSet.SchemaConfig.RequiredYamlHeaders;
-                                if (requiredYamlHeaders.Any())
-                                {
-                                    issues.Error(ValidationErrorCode.RequiredYamlHeaderMissing, $"Missing required YAML headers: {requiredYamlHeaders.ComponentsJoinedByString(", ")}");
-                                }
-
-                                // This file doesn't have YAML front matter, so we just return the full contents of the file
-                                return contents;
+                                // This file doesn't have YAML front matter
+                                return null;
                             }
                             else if (trimmedCurrentLine == YamlFrontMatterHeader)
                             {
@@ -299,18 +293,50 @@ namespace ApiDoctor.Validation
                         currentLine = reader.ReadLine();
                     }
                 }
+                return frontMatter.ToString();              
+            }
+        }
 
-                if (currentState == YamlFrontMatterDetectionState.SecondTokenFound)
+        /// <summary>
+        /// Parses the file contents and removes yaml front matter from the markdown.
+        /// </summary>
+        /// <param name="contents">Contents.</param>
+        public string ParseAndRemoveYamlFrontMatter(string contents, IssueLogger issues)
+        {
+            string frontMatter = ExtractYamlFrontMatter(contents, issues);
+            if (string.IsNullOrWhiteSpace(frontMatter))
+            {
+                var requiredYamlHeaders = DocSet.SchemaConfig.RequiredYamlHeaders;
+                if (requiredYamlHeaders.Any())
                 {
-                    // Parse YAML metadata
-                    ParseYamlMetadata(frontMatter.ToString(), issues);
-                    return reader.ReadToEnd();
+                    issues.Error(ValidationErrorCode.RequiredYamlHeaderMissing, $"Missing required YAML headers: {requiredYamlHeaders.ComponentsJoinedByString(", ")}");
                 }
-                else
-                {
-                    // Something went wrong along the way, so we just return the full file
-                    return contents;
-                }
+                return contents;
+            }
+            ParseYamlMetadata(frontMatter, issues);
+            contents = RemoveYamlFrontMatter(contents);
+            return contents;
+        }
+
+        public static string RemoveYamlFrontMatter(string contents)
+        {
+            const string YamlFrontMatterHeader = "---";
+
+            var firstToken = contents.IndexOf(YamlFrontMatterHeader);
+            if (firstToken == -1)
+            {
+                // This file doesn't have YAML front matter, so we just return the full contents of the file
+                return contents;
+            }
+            var secondToken = contents.IndexOf(YamlFrontMatterHeader, firstToken + 1);
+            if (secondToken == -1)
+            {
+                // Something went wrong along the way, so we just return the full file
+                return contents;
+            }
+            else
+            {
+                return contents.Substring(secondToken + YamlFrontMatterHeader.Length);
             }
         }
 
@@ -348,17 +374,17 @@ namespace ApiDoctor.Validation
             }
 
             // Get document type from YAML front matter
-            string docTypeValue;
-            if (dictionary.TryGetValue("doc_type", out docTypeValue))
+            string pageTypeValue;
+            if (dictionary.TryGetValue("doc_type", out pageTypeValue))
             {
-                DocumentType documentType;
-                if (Enum.TryParse(docTypeValue.Replace("\"", string.Empty), true, out documentType))
+                PageType pageType;
+                if (Enum.TryParse(pageTypeValue.Replace("\"", string.Empty), true, out pageType))
                 {
-                    this.DocType = documentType;
+                    this.DocumentPageType = pageType;
                 }
                 else
                 {
-                    issues.Error(ValidationErrorCode.InvalidYamlFrontMatter, $"Invalid value for `doc_type` specified in YAML metadata: {docTypeValue}");
+                    issues.Error(ValidationErrorCode.InvalidYamlFrontMatter, $"Invalid value for `doc_type` specified in YAML metadata: {pageTypeValue}");
                 }
             }
         }
@@ -370,7 +396,7 @@ namespace ApiDoctor.Validation
             SecondTokenFound
         }
 
-        public enum DocumentType
+        public enum PageType
         {
             NotSpecified,
             ResourcePageType,
@@ -589,18 +615,18 @@ namespace ApiDoctor.Validation
         public void SetExpectedDocumentHeaders()
         {
             var documentOutline = this.Parent.DocumentStructure;
-            switch (this.DocType)
+            switch (this.DocumentPageType)
             {
-                case DocumentType.ApiPageType:
+                case PageType.ApiPageType:
                     this.ExpectedDocumentHeaders = documentOutline.ApiPageType;
                     break;
-                case DocumentType.ResourcePageType:
+                case PageType.ResourcePageType:
                     this.ExpectedDocumentHeaders = documentOutline.ResourcePageType;
                     break;
-                case DocumentType.EnumPageType:
+                case PageType.EnumPageType:
                     this.ExpectedDocumentHeaders = documentOutline.EnumPageType;
                     break;
-                case DocumentType.ConceptualPageType:
+                case PageType.ConceptualPageType:
                     this.ExpectedDocumentHeaders = documentOutline.ConceptualPageType;
                     break;
                 default:
