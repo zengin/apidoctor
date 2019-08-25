@@ -94,7 +94,7 @@ namespace ApiDoctor.Validation
 
         public ApiRequirements Requirements { get; internal set; }
 
-        public DocumentOutlineFile DocumentStructure { get; internal set; }
+        public DocumentOutlineFile DocumentStructure { get; internal set; } = new DocumentOutlineFile();
 
         public LinkValidationConfigFile LinkValidationConfig { get; private set; }
 
