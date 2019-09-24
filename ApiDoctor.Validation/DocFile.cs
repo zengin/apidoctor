@@ -699,7 +699,7 @@ namespace ApiDoctor.Validation
                     {
                         if (multiplesFound == 1)
                         {
-                            issues.Error(ValidationErrorCode.DocumentHeaderInWrongCase, $"Multiple headers expected but only one was found: {found.Title}");
+                            issues.Warning(ValidationErrorCode.DocumentHeaderInWrongCase, $"Multiple headers expected but only one was found: {found.Title}");
                         }
 
                         if (multiplesFound > 0)
