@@ -96,6 +96,8 @@ namespace ApiDoctor.Validation
 
         public DocumentOutlineFile DocumentStructure { get; internal set; } = new DocumentOutlineFile();
 
+        public MetadataValidationConfigs MetadataValidationConfigs { get; internal set; }
+
         public LinkValidationConfigFile LinkValidationConfig { get; private set; }
 
         internal TableSpec.TableSpecConverter TableParser { get; private set; }
@@ -138,6 +140,14 @@ namespace ApiDoctor.Validation
             {
                 Console.WriteLine("Using API requirements file: {0}", foundRequirements.SourcePath);
                 this.Requirements = foundRequirements.ApiRequirements;
+            }
+
+            MetadataValidationConfigFile[] documentsValidationConfigs = TryLoadConfigurationFiles<MetadataValidationConfigFile>(this.SourceFolderPath);
+            var foundDocsconfigs = documentsValidationConfigs.FirstOrDefault();
+            if (null != foundDocsconfigs)
+            {
+                Console.WriteLine("Using Documents validation config file: {0}", foundDocsconfigs.SourcePath);
+                this.MetadataValidationConfigs = foundDocsconfigs.MetadataValidationConfigs;
             }
 
             DocumentOutlineFile[] outlines = TryLoadConfigurationFiles<DocumentOutlineFile>(this.SourceFolderPath);
@@ -383,7 +393,7 @@ namespace ApiDoctor.Validation
 
             var definedTypes = new HashSet<string>(
                 this.Resources.Select(r => r.Name).
-                Concat(this.Enums.Select(e => (SchemaConfig.DefaultNamespace + "." + e.TypeName).Trim('.'))).
+                Concat(this.Enums.Select(e => (e.Namespace + "." + e.TypeName).Trim('.'))).
                 Concat(new[] { "odata.error" }));
 
             foreach (var resource in this.Resources)
@@ -572,7 +582,7 @@ namespace ApiDoctor.Validation
                 var responseValidation = actualResponse.IsResponseValid(
                     method.SourceFile.DisplayName,
                     method.SourceFile.Parent.Requirements,
-                    issues.For(method.SourceFile.DisplayName));
+                    issues);
             }
         }
 

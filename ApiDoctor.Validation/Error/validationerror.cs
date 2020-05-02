@@ -74,6 +74,7 @@ namespace ApiDoctor.Validation.Error
         MissingAccessToken,
         JsonErrorObjectExpected,
         RequestWasEmptyOrNull,
+        UnpairedRequest,
         InvalidRequestFormat,
         UnsupportedContentType,
         RewriteRequestFailure,
@@ -115,6 +116,7 @@ namespace ApiDoctor.Validation.Error
         DocumentHeaderInWrongCase,
         MisspeltDocumentHeader,
         RequiredYamlHeaderMissing,
+        IncorrectYamlHeaderFormat,
         SkippedSimilarErrors,
         RequiredScopesMissing,
         RequiredApiVersionsMissing,
@@ -124,6 +126,7 @@ namespace ApiDoctor.Validation.Error
         DuplicateMethodIdentifier,
         DuplicateResource,
         ContentFormatException,
+        NamespaceMismatch,
 
         AmbiguousExample,
     }
